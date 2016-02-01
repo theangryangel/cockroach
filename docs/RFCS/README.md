@@ -62,4 +62,3 @@ During its lifetime a RFCs can have the following status:
   A RFC receives this status when the described feature has been
   superseded.
     
-    
