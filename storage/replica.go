@@ -1304,6 +1304,8 @@ func (r *Replica) applyRaftCommand(ctx context.Context, index uint64, originRepl
 		}
 		r.mu.Unlock()
 	}
+	sp := tracing.SpanFromContext(ctx)
+	sp.LogEvent("batch committed")
 
 	// On successful write commands, flush to event feed, and handle other
 	// write-related triggers including splitting and config gossip updates.
@@ -1338,6 +1340,8 @@ func (r *Replica) applyRaftCommandInBatch(ctx context.Context, index uint64, ori
 	// The epoch check allows us to poison the sequence cache to avoid
 	// anomalies when we know that the transaction has been aborted or pushed,
 	// but it itself does not.
+	sp := tracing.SpanFromContext(ctx)
+	sp.LogEvent("check sequence cache")
 	if ba.IsWrite() && ba.Txn != nil {
 		if err := r.checkSequenceCache(btch, *ba.Txn); err != nil {
 			return btch, nil, nil, err
@@ -1375,13 +1379,16 @@ func (r *Replica) applyRaftCommandInBatch(ctx context.Context, index uint64, ori
 	// Execute the commands. If this returns without an error, the batch must
 	// be committed (EndTransaction with a CommitTrigger may unlock
 	// readOnlyCmdMu via a batch.Defer).
+	sp.LogEvent("execution")
 	br, intents, err := r.executeBatch(btch, ms, ba)
+	sp.LogEvent("execution [done]")
 
 	// Regardless of error, add result to the sequence cache if this is
 	// a write method. This must be done as part of the execution of
 	// raft commands so that every replica maintains the same responses
 	// to continue request idempotence, even if leadership changes.
 	if ba.IsWrite() {
+		sp.LogEvent("add to sequence cache")
 		if err == nil {
 			// If command was successful, flush the MVCC stats to the batch.
 			if err := r.stats.MergeMVCCStats(btch, *ms); err != nil {

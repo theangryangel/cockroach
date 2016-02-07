@@ -559,6 +559,8 @@ func (n *Node) executeCmd(argsI proto.Message) (proto.Message, error) {
 		if pErr != nil {
 			br = &roachpb.BatchResponse{}
 			sp.LogEvent(fmt.Sprintf("error: %T", pErr.GetDetail()))
+		} else {
+			sp.LogEvent("execution completed")
 		}
 		if br.Error != nil {
 			panic(roachpb.ErrorUnexpectedlySet(n.stores, br))
