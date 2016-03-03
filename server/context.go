@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -32,7 +31,6 @@ import (
 	"github.com/cockroachdb/cockroach/base"
 	"github.com/cockroachdb/cockroach/gossip/resolver"
 	"github.com/cockroachdb/cockroach/roachpb"
-	"github.com/cockroachdb/cockroach/security"
 	"github.com/cockroachdb/cockroach/storage"
 	"github.com/cockroachdb/cockroach/storage/engine"
 	"github.com/cockroachdb/cockroach/util/log"
@@ -258,24 +256,14 @@ func (ctx *Context) AdminURL() string {
 
 // PGURL returns the URL for the postgres endpoint.
 func (ctx *Context) PGURL(user string) string {
-	// Try to convert path to an absolute path. Failing to do so return path
-	// unchanged.
-	absPath := func(path string) string {
-		r, err := filepath.Abs(path)
-		if err != nil {
-			return path
-		}
-		return r
-	}
-
 	options := url.Values{}
 	if ctx.Insecure {
 		options.Add("sslmode", "disable")
 	} else {
 		options.Add("sslmode", "verify-full")
-		options.Add("sslcert", absPath(security.ClientCertPath(ctx.Certs, user)))
-		options.Add("sslkey", absPath(security.ClientKeyPath(ctx.Certs, user)))
-		options.Add("sslrootcert", absPath(security.CACertPath(ctx.Certs)))
+		options.Add("sslcert", ctx.SSLCert)
+		options.Add("sslkey", ctx.SSLCertKey)
+		options.Add("sslrootcert", ctx.SSLCA)
 	}
 	pgURL := url.URL{
 		Scheme:   "postgresql",

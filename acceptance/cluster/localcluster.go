@@ -401,7 +401,10 @@ func (l *LocalCluster) createRoach(node *testNode, dns, vols *Container, cmd ...
 }
 
 func (l *LocalCluster) createCACert() {
-	maybePanic(security.RunCreateCACert(l.CertsDir, keyLen))
+	maybePanic(security.RunCreateCACert(
+		filepath.Join(l.CertsDir, security.EmbeddedCACert),
+		filepath.Join(l.CertsDir, security.EmbeddedCAKey),
+		keyLen))
 }
 
 func (l *LocalCluster) createNodeCerts() {
@@ -409,7 +412,12 @@ func (l *LocalCluster) createNodeCerts() {
 	for _, node := range l.Nodes {
 		nodes = append(nodes, node.nodeStr)
 	}
-	maybePanic(security.RunCreateNodeCert(l.CertsDir, keyLen, nodes))
+	maybePanic(security.RunCreateNodeCert(
+		filepath.Join(l.CertsDir, security.EmbeddedCACert),
+		filepath.Join(l.CertsDir, security.EmbeddedCAKey),
+		filepath.Join(l.CertsDir, security.EmbeddedNodeCert),
+		filepath.Join(l.CertsDir, security.EmbeddedNodeKey),
+		keyLen, nodes))
 }
 
 func (l *LocalCluster) startNode(node *testNode) {
@@ -533,7 +541,12 @@ func (l *LocalCluster) Start() {
 	log.Infof("creating certs (%dbit) in: %s", keyLen, l.CertsDir)
 	l.createCACert()
 	l.createNodeCerts()
-	maybePanic(security.RunCreateClientCert(l.CertsDir, 512, security.RootUser))
+	maybePanic(security.RunCreateClientCert(
+		filepath.Join(l.CertsDir, security.EmbeddedCACert),
+		filepath.Join(l.CertsDir, security.EmbeddedCAKey),
+		filepath.Join(l.CertsDir, security.EmbeddedRootCert),
+		filepath.Join(l.CertsDir, security.EmbeddedRootKey),
+		512, security.RootUser))
 
 	l.monitorCtx, l.monitorCtxCancelFunc = context.WithCancel(context.Background())
 	go l.monitor()

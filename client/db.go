@@ -234,9 +234,11 @@ func Open(stopper *stop.Stopper, addr string) (*DB, error) {
 	}
 
 	q := u.Query()
-	if dir := q["certs"]; len(dir) > 0 {
-		ctx.Certs = dir[0]
-	}
+	/*
+		if dir := q["certs"]; len(dir) > 0 {
+			ctx.Certs = dir[0]
+		}
+	*/
 
 	sender, err := newSender(u, ctx, stopper)
 	if err != nil {

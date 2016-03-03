@@ -53,9 +53,11 @@ func (roachDriver) Open(dsn string) (driver.Conn, error) {
 		}
 		params[param] = value[0]
 	}
-	if dir := params["certs"]; len(dir) > 0 {
-		ctx.Certs = dir
-	}
+	/*
+		if dir := params["certs"]; len(dir) > 0 {
+			ctx.Certs = dir
+		}
+	*/
 
 	sender, err := newSender(u, ctx)
 	if err != nil {
